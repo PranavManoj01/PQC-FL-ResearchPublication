@@ -1,5 +1,34 @@
 # PQC-FL: Decentralized Post-Quantum Federated Learning for Banking Systems
 
+> **Status note (October 2026).** The paper describes sub-aggregate servers and adaptive signature selection. The original experiment scripts implement a simpler version: a single aggregator, with every client signing using both Dilithium2 and Falcon-512. `pqc_fl_fixed.py` is a later rework that implements the design the paper describes. Also, the 88% accuracy reported in the paper equals the majority-class rate on this dataset (about 87.7% of records are non-defaults), so it is not evidence of predictive skill.
+
+## Code
+
+| File | What it is |
+| --- | --- |
+| `original/50client.py` | The original experiment script: 50 clients, Kyber512 + Fernet encryption, Dilithium2 and Falcon-512 signatures, single FedAvg aggregator. Data path is hard-coded for a local machine. |
+| `pqc_fl_fixed.py` | 2026 rework: adaptive signature choice, three sub-aggregate servers, a tamper test, precision/recall/F1 reporting, no plaintext weights returned, no pickle on network data, and a `plain` mode for measuring overhead. |
+| `requirements.txt` | Python dependencies. |
+
+## Running the rework
+
+```
+pip install -r requirements.txt
+set PQC_FL_DATA_DIR=path\to\client_partitions   # folder with client_0.csv ... client_49.csv
+python pqc_fl_fixed.py                           # PQC mode
+set PQC_FL_MODE=plain && python pqc_fl_fixed.py  # same pipeline, no crypto
+```
+
+Each run writes `results_<mode>.json` with per-round accuracy, precision, recall, F1, rejected updates, payload size and timing. The dataset is not included. Each client file needs the columns Income, Age, Experience, CURRENT_JOB_YRS, CURRENT_HOUSE_YRS, Married/Single, House_Ownership, Car_Ownership, Profession, CITY, STATE and Risk_Flag.
+
+A smoke test of the rework (12 clients, 6 rounds, not the paper's setup) showed PQC payloads 81% larger than plain, server time per round 2.1 times higher, and about 5 ms of client crypto per round. These are not the paper's reported figures.
+
+---
+
+# Paper summary
+
+The summary below is the paper's, unchanged.
+
 ## Overview
 In today’s digital banking environment, protecting sensitive consumer data is paramount as institutions increasingly rely on AI-driven models for credit risk assessment. Classical cryptographic methods such as RSA and ECC are vulnerable to quantum attacks via Shor’s algorithm, which can break these schemes in polynomial time.  
 
